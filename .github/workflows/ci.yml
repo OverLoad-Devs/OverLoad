@@ -15,7 +15,7 @@ jobs:
     runs-on: xcode-27
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Show Xcode version
         run: xcodebuild -version
@@ -30,14 +30,43 @@ jobs:
 
       - name: Select an iPhone simulator
         id: simulator
+        timeout-minutes: 3
         run: |
-          xcrun simctl list devices available -j | python3 -c '
-          import json, os, sys
-          devices = json.load(sys.stdin)["devices"]
-          phone = next(d for runtime, entries in devices.items() if ".iOS-" in runtime for d in entries if d["name"].startswith("iPhone"))
-          with open(os.environ["GITHUB_OUTPUT"], "a") as output:
-              output.write("id=" + phone["udid"] + "\n")
-          '
+          python3 - <<'PYTHON'
+          import json
+          import os
+          import subprocess
+          import sys
+          import time
+
+          # CoreSimulator can crash during its first device-pair discovery on a
+          # fresh hosted runner. Build and test failures still fail normally.
+          for attempt in range(1, 4):
+              result = subprocess.run(
+                  ["xcrun", "simctl", "list", "devices", "available", "-j"],
+                  capture_output=True, text=True, timeout=30,
+              )
+              if result.returncode == 0:
+                  devices = json.loads(result.stdout)["devices"]
+                  phones = [
+                      device for runtime, entries in devices.items()
+                      if ".iOS-" in runtime
+                      for device in entries
+                      if device["name"].startswith("iPhone") and device.get("isAvailable", False)
+                  ]
+                  if not phones:
+                      sys.exit("No available iPhone simulator. Check the runner's installed iOS runtimes.")
+                  phone = phones[0]
+                  print(f"Using {phone['name']} ({phone['udid']})")
+                  with open(os.environ["GITHUB_OUTPUT"], "a") as output:
+                      output.write("id=" + phone["udid"] + "\n")
+                  break
+              print(f"Simulator discovery attempt {attempt}/3 failed (exit {result.returncode}).", flush=True)
+              print(result.stderr, file=sys.stderr, flush=True)
+              if attempt == 3:
+                  sys.exit("CoreSimulator discovery failed after three attempts; tests were not run.")
+              time.sleep(5)
+          PYTHON
 
       - name: Run Swift Testing suite
         run: |
