@@ -1,35 +1,16 @@
 # OverLoad
 
-A SwiftUI app for iOS, macOS, and visionOS.
+An iOS 17+ SwiftUI workout app for CSC 211, using SwiftData and no third-party dependencies.
 
-## Run in Xcode
+## Run
 
-1. Install Xcode 27 or newer and the iOS simulator components.
-2. Clone this repository:
+1. Clone this repository and open `OverLoad.xcodeproj`.
+2. Use Xcode 27 (matching the committed project format and CI). Install an iOS simulator runtime.
+3. Select the shared **OverLoad** scheme and an iPhone simulator running iOS 17+.
+4. Press **Command-R**. No API keys, environment files, or development team are needed for the simulator. Physical devices require your own signing team.
 
-   ```sh
-   git clone https://github.com/OverLoad-Devs/OverLoad.git
-   cd OverLoad
-   open OverLoad.xcodeproj
-   ```
+The app seeds 15 exercises on first launch. Start a workout, pick exercises, add sets, enter reps and pounds, and finish to save. Saved sessions appear in History and inform Load Coach suggestions. Cancel discards the draft; drafts do not survive app termination. Training Path is a team-owned placeholder.
 
-3. Select the shared **OverLoad** scheme and an **iPhone simulator** as the run destination.
-4. Press **Command-R** to build and run.
+## Tests and collaboration
 
-No environment files, API keys, third-party dependencies, or development team are needed for the simulator. To run on a physical device, select your own development team under **Signing & Capabilities**.
-
-The project targets iOS 27, macOS 26.6.2, and visionOS 27. Choose a simulator with an OS version at or above the deployment target. The app currently displays “Hello, world!”.
-
-## Build checks
-
-GitHub Actions builds the iOS simulator app using the shared scheme and reports the required `build` check. To run that build locally:
-
-```sh
-xcodebuild build \
-  -project OverLoad.xcodeproj \
-  -scheme OverLoad \
-  -destination 'generic/platform=iOS Simulator' \
-  CODE_SIGNING_ALLOWED=NO
-```
-
-No automated test targets are configured yet. A passing build verifies compilation; it does not guarantee the app is free of runtime crashes.
+Press **Command-U** to run the Swift Testing suite in `OverLoadTests`. CI builds and tests on pushes to `dev` and pull requests into `main`. Work on `dev`, then merge through a passing pull request. See [AGENTS.md](AGENTS.md) for model fields, folder ownership, validation commands, and the starter Load Coach rules.
