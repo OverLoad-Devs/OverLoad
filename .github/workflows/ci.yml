@@ -27,3 +27,23 @@ jobs:
             -scheme OverLoad \
             -destination 'generic/platform=iOS Simulator' \
             CODE_SIGNING_ALLOWED=NO
+
+      - name: Select an iPhone simulator
+        id: simulator
+        run: |
+          xcrun simctl list devices available -j | python3 -c '
+          import json, os, sys
+          devices = json.load(sys.stdin)["devices"]
+          phone = next(d for runtime, entries in devices.items() if ".iOS-" in runtime for d in entries if d["name"].startswith("iPhone"))
+          with open(os.environ["GITHUB_OUTPUT"], "a") as output:
+              output.write("id=" + phone["udid"] + "\n")
+          '
+
+      - name: Run Swift Testing suite
+        run: |
+          xcodebuild test \
+            -project OverLoad.xcodeproj \
+            -scheme OverLoad \
+            -destination 'platform=iOS Simulator,id=${{ steps.simulator.outputs.id }}' \
+            -resultBundlePath TestResults.xcresult \
+            CODE_SIGNING_ALLOWED=NO
