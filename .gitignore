@@ -1,0 +1,17 @@
+# macOS
+.DS_Store
+
+# Xcode personal settings
+xcuserdata/
+*.xcuserstate
+
+# Build output
+build/
+DerivedData/
+*.xcarchive
+*.ipa
+
+# Local secrets
+.env
+.env.*
+!.env.example
