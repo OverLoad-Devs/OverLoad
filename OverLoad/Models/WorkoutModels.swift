@@ -19,10 +19,12 @@ enum MuscleGroup: String, Codable, CaseIterable {
 @Model final class WorkoutSession {
     @Attribute(.unique) var id: UUID
     var date: Date
+    var name: String = "Workout"
+    var duration: TimeInterval?
     @Relationship(deleteRule: .cascade, inverse: \WorkoutSet.session) var sets: [WorkoutSet] = []
 
-    init(id: UUID = UUID(), date: Date = .now) {
-        self.id = id; self.date = date
+    init(id: UUID = UUID(), date: Date = .now, name: String = "Workout", duration: TimeInterval? = nil) {
+        self.id = id; self.date = date; self.name = name; self.duration = duration
     }
 }
 

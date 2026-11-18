@@ -4,16 +4,32 @@ import SwiftData
 struct SetRow: View {
     let number: Int
     @Binding var set: DraftSet
+
     var body: some View {
-        HStack {
-            Text("\(number)").foregroundStyle(.secondary).frame(width: 24)
-            TextField("Reps", value: $set.reps, format: .number)
-                .keyboardType(.numberPad).accessibilityLabel("Set \(number) reps")
-            Text("reps").foregroundStyle(.secondary)
-            TextField("Weight", value: $set.weight, format: .number)
-                .keyboardType(.decimalPad).accessibilityLabel("Set \(number) weight in pounds")
-            Text("lb").foregroundStyle(.secondary)
-        }.textFieldStyle(.roundedBorder)
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .firstTextBaseline, spacing: 12) {
+                Text("\(number)").foregroundStyle(.secondary).frame(width: 24)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Reps").font(.caption).foregroundStyle(.secondary)
+                    TextField(set.targetReps.map(String.init) ?? "8", text: $set.repsText)
+                        .keyboardType(.numberPad).accessibilityLabel("Set \(number) reps")
+                }
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Weight (lb)").font(.caption).foregroundStyle(.secondary)
+                    TextField("0", text: $set.weightText)
+                        .keyboardType(.decimalPad).accessibilityLabel("Set \(number) weight in pounds")
+                }
+            }.textFieldStyle(.roundedBorder)
+            if let previous = set.previous {
+                Text("Previous: \(previous)").font(.caption).foregroundStyle(.secondary)
+            }
+            if set.repsText.isEmpty && set.weightText.isEmpty {
+                Text("Not logged yet").font(.caption).foregroundStyle(.secondary)
+            } else if let message = set.validationMessage {
+                Label(message, systemImage: "exclamationmark.circle")
+                    .font(.caption).foregroundStyle(.red)
+            }
+        }.padding(.vertical, 4)
     }
 }
 
