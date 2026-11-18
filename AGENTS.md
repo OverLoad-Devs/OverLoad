@@ -12,8 +12,9 @@ OverLoad/
   Persistence/AppPersistence.swift Container creation and first-launch exercise seed
   Persistence/SampleData.swift     15 exercises and isolated in-memory preview data
   Features/Workout/
-    WorkoutView.swift              Start, select exercises, edit sets, finish/cancel
-    WorkoutViewModel.swift         DraftSet, DraftExercise, validation and save
+    WorkoutView.swift              Start, remove draft exercises, edit sets, save feedback
+    ExercisePickerView.swift       Search by name or muscle; mark already-added exercises
+    WorkoutViewModel.swift         DraftSet, DraftExercise, search, validation and save
   Features/History/
     HistoryView.swift              Saved sessions
     SessionDetailView.swift        Exercise sets and total volume
@@ -43,7 +44,7 @@ OverLoadTests/WorkoutPersistenceTests.swift
 
 Users log only reps and weight. Do not add RPE, effort, or rating fields. Zero pounds represents bodyweight; volume is external load × reps, so bodyweight sets contribute zero. Exercise deletion is not exposed.
 
-Draft workouts live in an `@Observable` view model, not SwiftData. Finish validates and saves a complete session; cancel discards the draft. Unsaved drafts do not survive app termination. Never put business rules in views. Every custom view has an in-memory-data preview.
+Draft workouts live in an `@Observable` view model, not SwiftData. Finish validates and saves a complete session; cancel discards the draft. Unsaved drafts do not survive app termination. Draft set fields preserve raw text so blank/invalid input blocks saving; reps and weight remain the only logged values. Removing an exercise only changes the draft, never the exercise library or history. Never put business rules in views. Every custom view has an in-memory-data preview.
 
 ## Load Coach rules
 
