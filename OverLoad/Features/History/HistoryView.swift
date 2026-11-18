@@ -10,6 +10,11 @@ struct HistoryView: View {
                     SessionDetailView(session: session)
                 } label: {
                     VStack(alignment: .leading, spacing: 6) {
+                        Text(session.name).font(.headline)
+                        if let duration = session.duration {
+                            Label(WorkoutDuration.formatted(duration), systemImage: "timer")
+                                .font(.caption).foregroundStyle(.secondary)
+                        }
                         Text(session.date, format: .dateTime.month().day().year().hour().minute())
                         Text("\(session.sets.count) sets · \(HistoryViewModel.volume(session), specifier: "%g") lb·reps")
                             .font(.caption).foregroundStyle(.secondary)

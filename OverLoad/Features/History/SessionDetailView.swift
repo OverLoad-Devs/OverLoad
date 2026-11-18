@@ -5,6 +5,8 @@ struct SessionDetailView: View {
     let session: WorkoutSession
     var body: some View {
         List {
+            Text(session.date, format: .dateTime.month().day().year().hour().minute())
+            StatCard(title: "Duration", value: session.duration.map(WorkoutDuration.formatted) ?? "Not recorded")
             StatCard(title: "Total volume", value: "\(HistoryViewModel.volume(session).formatted()) lb·reps")
             ForEach(HistoryViewModel.groups(session)) { group in
                 Section(group.exercise.name) {
@@ -13,7 +15,7 @@ struct SessionDetailView: View {
                     }
                 }
             }
-        }.navigationTitle(session.date.formatted(date: .abbreviated, time: .omitted))
+        }.navigationTitle(session.name)
     }
 }
 
