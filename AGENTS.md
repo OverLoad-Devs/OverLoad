@@ -9,11 +9,15 @@ OverLoad/
   App/OverLoadApp.swift             Persistent container and startup error handling
   App/RootTabView.swift             Four independent navigation tabs
   Models/WorkoutModels.swift       Shared SwiftData models and MuscleGroup
+  Models/WorkoutTemplate.swift     Reusable workouts and ordered planned exercises
   Persistence/AppPersistence.swift Container creation and first-launch exercise seed
-  Persistence/SampleData.swift     15 exercises and isolated in-memory preview data
+  Persistence/SampleData.swift     15 exercise definitions and isolated preview data
   Features/Workout/
-    WorkoutView.swift              Start, select exercises, edit sets, finish/cancel
-    WorkoutViewModel.swift         DraftSet, DraftExercise, validation and save
+    WorkoutView.swift              Workout library, timed sessions, set logging, save feedback
+    TemplateEditorView.swift       Create/edit workout names, exercises, sets, rep targets
+    TemplateEditorViewModel.swift  Template drafts, validation and persistence
+    ExercisePickerView.swift       Search by name or muscle; mark already-added exercises
+    WorkoutViewModel.swift         DraftSet, DraftExercise, search, validation and save
   Features/History/
     HistoryView.swift              Saved sessions
     SessionDetailView.swift        Exercise sets and total volume
@@ -31,6 +35,7 @@ OverLoad/
   Assets.xcassets/
 OverLoadTests/LoadCoachEngineTests.swift
 OverLoadTests/WorkoutPersistenceTests.swift
+OverLoadTests/WorkoutTemplateTests.swift
 .github/workflows/ci.yml
 ```
 
@@ -38,12 +43,15 @@ OverLoadTests/WorkoutPersistenceTests.swift
 
 - `MuscleGroup`: String, Codable, CaseIterable; chest, back, shoulders, biceps, triceps, quads, hamstrings, glutes, calves, core.
 - `Exercise`: unique UUID `id`, String `name`, MuscleGroup `primary`, [MuscleGroup] `secondary`.
-- `WorkoutSession`: unique UUID `id`, Date `date`, [WorkoutSet] `sets`. Sets cascade-delete with the session, with inverse `WorkoutSet.session`.
+- `WorkoutSession`: unique UUID `id`, Date `date` (start time), String `name` (default “Workout”), optional TimeInterval `duration` in seconds, [WorkoutSet] `sets`. Sets cascade-delete with the session, with inverse `WorkoutSet.session`.
 - `WorkoutSet`: unique UUID `id`, Exercise `exercise`, Int `reps`, Double `weight` in pounds, Int `orderIndex`, optional WorkoutSession `session` inverse.
+
+- `WorkoutTemplate`: unique UUID `id`, String `name`, [WorkoutTemplateExercise] `exercises` (cascade deletion with inverse `template`). Computed ordered exercises and planned-set count.
+- `WorkoutTemplateExercise`: unique UUID `id`, Exercise `exercise`, Int `setCount`, Int `targetReps`, Int `orderIndex`, optional WorkoutTemplate `template`. Deleting a template never deletes library exercises or sessions.
 
 Users log only reps and weight. Do not add RPE, effort, or rating fields. Zero pounds represents bodyweight; volume is external load × reps, so bodyweight sets contribute zero. Exercise deletion is not exposed.
 
-Draft workouts live in an `@Observable` view model, not SwiftData. Finish validates and saves a complete session; cancel discards the draft. Unsaved drafts do not survive app termination. Never put business rules in views. Every custom view has an in-memory-data preview.
+Draft workouts live in an `@Observable` view model, not SwiftData. Finish validates and saves a complete session; cancel discards the draft. Unsaved drafts do not survive app termination. Draft set fields preserve raw text so blank/invalid input blocks saving; reps and weight remain the only logged values. Removing an exercise only changes the draft, never the exercise library or history. Never put business rules in views. Every custom view has an in-memory-data preview.
 
 ## Load Coach rules
 
@@ -69,8 +77,16 @@ xcodebuild test -project OverLoad.xcodeproj -scheme OverLoad \
 
 Use an installed iPhone simulator (iOS 17+); substitute its name if needed. CI selects an available iPhone automatically and runs the Swift Testing target under the required `build` job. Keep that check enabled.
 
+## Reusable workouts and timing
+
+Workout → Create Workout builds a reusable named routine such as Pull. The editor manages exercise order, planned sets (1–10), and target reps (1–100) without mutating saved models until Save. Cancel leaves the template unchanged.
+
+Start copies the template into a session draft. Planned rows have blank reps/weight; the target is a placeholder and the last saved session for each exercise supplies a previous-set reference. Users must fill every row or remove skipped sets before Finish. Actual logging never modifies the template. Empty workouts remain available.
+
+Elapsed time uses the difference between start and current Date, so backgrounding does not pause the clock. Finish snapshots the name, actual sets, and elapsed seconds into history. Existing sessions retain “Workout” and an unknown duration (shown as “Not recorded”); new schema fields have defaults or are optional. Saved names and duration survive template edits/deletion. Drafts/timers do not survive process termination.
+
 ## Collaboration
 
-Work on `dev`; push there, let CI pass, and use a pull request into `main`. Load Coach and Training Path teams own their feature folders; coordinate changes to shared models, persistence, workout and history. Do not implement Training Path logic in this scaffold.
+Work toward `dev` on a feature branch. Keep building and committing; open a PR only when the user says the work is ready. Then let CI pass before merging into `dev`, and use a separate PR to promote to `main`. Load Coach and Training Path teams own their feature folders; coordinate changes to shared models, persistence, workout and history. Do not implement Training Path logic in this scaffold.
 
 Commit sources, assets, project configuration, and shared schemes. Keep build output, personal Xcode settings, and secrets out of Git. Preserve unrelated user changes.
